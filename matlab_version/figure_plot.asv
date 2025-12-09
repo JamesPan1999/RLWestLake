@@ -221,8 +221,8 @@ function drawPolicyArrow(kk, ind, i_bias, j_bias, kk_new, ratio, greenColor, act
 
     % For the non-moving action, draw a circle to represent the stay state
     if action(1) == 0 && action(2) == 0  % Assuming the fifth action is to stay
-        MarkerSize = 5+kk_new*6;
-        plot(i_bias(ind), j_bias(ind), 'o', 'MarkerSize', MarkerSize, 'linewidth', 2, 'color', greenColor);
+        MarkerSize = 
+        plot(i_bias(ind), j_bias(ind), 'o', 'MarkerSize', 8+kk_new*action(5), 'linewidth', 2, 'color', greenColor);
         return;
     else
         % Draw an arrow to represent the moving action; note that '-' used when drawing the y-axis arrow ensures consistency with the inverse y-coordinate handling.
