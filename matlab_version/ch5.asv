@@ -53,7 +53,7 @@ state_history(1, :) = agent_state;
 
 %%
 % MC basic
-PE_length = 5;
+PE_length = 10;
 
 for step = 1:episode_length
     state_value_history(:,step) = state_value;
@@ -100,7 +100,7 @@ function q=q_pi_iter(state, action, x_length, y_length, target_state, obstacle_s
     [new_state_father, reward_intime] = next_state_and_reward(state, action, x_length, y_length, target_state, obstacle_state, reward_forbidden, reward_target, reward_step);
     % 走一步进入action下的某一个叶子节点（new_state）时，对该叶子节点下面进行蒙特卡洛搜索。如果有多个叶子节点，还需要将这些叶子节点加权做和
     
-    n = 10;
+    n = 20;
     for iter_episode = 1:n  % 求reward的平均值用
         new_state = new_state_father;
         reward_future_recorder = 0;
