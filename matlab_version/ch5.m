@@ -62,9 +62,9 @@ for step = 1:episode_length
         for si = 1:state_space
             siy = ceil(si/x_length);
             six = si-(siy-1)*x_length;
-            parfor ai = 1:length(actions)
-                qan(ai)=q_pi([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, state_value)
-                q(ai)=q_pi_iter([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy)
+            for ai = 1:length(actions)
+                qan(ai)=q_pi([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, state_value);
+                q(ai)=q_pi_iter([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy);
             end
             state_value_new(si) = policy(si,:)*q';
             si_q(si,:) = q;
@@ -76,12 +76,12 @@ for step = 1:episode_length
     for si = 1:state_space
         % [qmax, action_index] = max(si_q(si,:));  % 也可以用迭代完后的状态值再算一遍每一个状态对应的动作值
         
-        siy = ceil(si/x_length);
-        six = si-(siy-1)*x_length;
-        for ai = 1:length(actions)
-            q(ai)=q_pi_iter([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy);
-        end
-        si_q(si,:) = q;
+        % siy = ceil(si/x_length);
+        % six = si-(siy-1)*x_length;
+        % parfor ai = 1:length(actions)
+        %     q(ai)=q_pi_iter([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy);
+        % end
+        % si_q(si,:) = q;
 
         [qmax, action_index] = max(si_q(si,:));
         policy(si,:) = 0;
@@ -100,14 +100,14 @@ function q=q_pi_iter(state, action, x_length, y_length, target_state, obstacle_s
     [new_state_father, reward_intime] = next_state_and_reward(state, action, x_length, y_length, target_state, obstacle_state, reward_forbidden, reward_target, reward_step);
     % 走一步进入action下的某一个叶子节点（new_state）时，对该叶子节点下面进行蒙特卡洛搜索。如果有多个叶子节点，还需要将这些叶子节点加权做和
     
-    n = 40;
+    n = 50;
     for iter_episode = 1:n  % 求reward的平均值用
         new_state = new_state_father;
         reward_future_recorder = 0;
-        for iter_deepth = 1:40   % 按照某些策略可能永远都到不了终点，故最好不要用while=终点来结束循环。且越future，贡献越小，后面可以忽略
+        for iter_deepth = 1:30   % 按照某些策略可能永远都到不了终点，故最好不要用while=终点来结束循环。且越future，贡献越小，后面可以忽略
             action = stochastic_policy(new_state, action_space, policy, x_length, y_length);
             [new_state, reward_future] = next_state_and_reward(new_state, action, x_length, y_length, target_state, obstacle_state, reward_forbidden, reward_target, reward_step);
-            reward_future_recorder = reward_future_recorder + gamma*reward_future;
+            reward_future_recorder = reward_future_recorder + gamma^iter_deepth*reward_future;
         end
         ErewardFuture = reward_future_recorder/n;
     end

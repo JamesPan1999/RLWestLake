@@ -4,10 +4,10 @@ clear
 close all
 % Initialize environment parameters
 agent_state = [1, 1];
-final_state = [3, 4];
-obstacle_state = [2,2; 3,2; 3,3; 2,4; 4,4; 2,5];
-x_length = 5;
-y_length = 5;
+final_state = [2, 2];
+obstacle_state = [1,2];
+x_length = 2;
+y_length = 2;
 gamma = 0.9;
 state_space = x_length * y_length;     % 状态个数
 state=1:state_space;         % 纯为了在网格上标注名字
@@ -50,10 +50,9 @@ reward_history = zeros(episode_length, 1);
 
 % Set the initial state
 state_history(1, :) = agent_state;
-
 %%
-% MC basic
-PE_length = 10;
+% 策略迭代(截断策略迭代)
+PE_length = 50;
 
 for step = 1:episode_length
     state_value_history(:,step) = state_value;
@@ -63,7 +62,50 @@ for step = 1:episode_length
             siy = ceil(si/x_length);
             six = si-(siy-1)*x_length;
             for ai = 1:length(actions)
-                qan(ai)=q_pi([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, state_value);
+                q(ai)=q_pi([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, state_value);
+            end
+            state_value_new(si) = policy(si,:)*q';
+            si_q(si,:) = q;
+        end
+        state_value = state_value_new;
+    end
+    
+    % 策略改进（贪婪）
+    for si = 1:state_space
+        % [qmax, action_index] = max(si_q(si,:));  % 也可以用迭代完后的状态值再算一遍每一个状态对应的动作值
+        
+        siy = ceil(si/x_length);
+        six = si-(siy-1)*x_length;
+        for ai = 1:length(actions)
+            q(ai)=q_pi([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, state_value);
+        end
+        si_q(si,:) = q;
+
+        [qmax, action_index] = max(si_q(si,:));
+        policy(si,:) = 0;
+        policy(si,action_index) = 1;
+    end
+end
+
+figure_policy(x_length, y_length, agent_state,final_state, obstacle_state, state, policy, actions) %[output:2b4ce430]
+figure_stateValue(x_length,y_length,agent_state,final_state,obstacle_state,state_value) %[output:694b8c6b]
+figure,plot([0:episode_length-1],state_value_history) %[output:0487adac]
+% 第一步的策略是一个很差的策略，导致价值函数并不是单调的。
+% 通常，不论是值迭代还是策略迭代，其前几步都不是按照指数收敛的。
+
+%%
+% MC basic
+PE_length = 50;
+
+for step = 1:episode_length
+    state_value_history(:,step) = state_value;
+    % 策略评价
+    for k = 1:PE_length
+        for si = 1:state_space
+            siy = ceil(si/x_length);
+            six = si-(siy-1)*x_length;
+            for ai = 1:length(actions)
+                % qan(ai)=q_pi([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, state_value);
                 q(ai)=q_pi_iter([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy);
             end
             state_value_new(si) = policy(si,:)*q';
@@ -94,24 +136,51 @@ figure_stateValue(x_length,y_length,agent_state,final_state,obstacle_state,state
 figure,plot([0:episode_length-1],state_value_history)
 % 第一步的策略是一个很差的策略，导致价值函数并不是单调的。
 % 通常，不论是值迭代还是策略迭代，其前几步都不是按照指数收敛的。
+%% DEbug
+
+
+PE_length = 30;
+
+% 策略评价
+for k = 1:PE_length
+    for si = 1:state_space
+        siy = ceil(si/x_length);
+        six = si-(siy-1)*x_length;
+        for ai = 1:length(actions)
+            qan(ai)=q_pi([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, state_value);
+            % q(ai)=q_pi_iter([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy);
+        end
+        state_value_new(si) = policy(si,:)*qan';
+        si_q(si,:) = qan;
+    end
+    state_value = state_value_new;
+end
+%%
+
+si = 1; ai = 3;
+six = 1; siy = 1;
+q_pi([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, state_value)
+q_pi_iter([six,siy], action_space{si}{ai}, x_length, y_length, final_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy)
 %%
 function q=q_pi_iter(state, action, x_length, y_length, target_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy)
     % 当前的state 选择 action后可以获得的回报的平均值
     [new_state_father, reward_intime] = next_state_and_reward(state, action, x_length, y_length, target_state, obstacle_state, reward_forbidden, reward_target, reward_step);
     % 走一步进入action下的某一个叶子节点（new_state）时，对该叶子节点下面进行蒙特卡洛搜索。如果有多个叶子节点，还需要将这些叶子节点加权做和
     
-    n = 100;
+    n = 500;
+    reward_future_recorder = 0;
     for iter_episode = 1:n  % 求reward的平均值用
         new_state = new_state_father;
-        reward_future_recorder = 0;
-        for iter_deepth = 1:250   % 按照某些策略可能永远都到不了终点，故最好不要用while=终点来结束循环。且越future，贡献越小，后面可以忽略
+        for iter_deepth = 1:50   % 按照某些策略可能永远都到不了终点，故最好不要用while=终点来结束循环。且越future，贡献越小，后面可以忽略
             action = stochastic_policy(new_state, action_space, policy, x_length, y_length);
             [new_state, reward_future] = next_state_and_reward(new_state, action, x_length, y_length, target_state, obstacle_state, reward_forbidden, reward_target, reward_step);
             reward_future_recorder = reward_future_recorder + gamma^iter_deepth*reward_future;
+            
+            % action_history{iter_deepth} = action;  % debug
+            % state_history{iter_deepth}= new_state;  % debug  
         end
-        ErewardFuture = reward_future_recorder/n;
     end
-    
+    ErewardFuture = reward_future_recorder/n;
     q = reward_intime + ErewardFuture;
 end
 

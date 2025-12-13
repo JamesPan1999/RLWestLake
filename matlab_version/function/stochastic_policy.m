@@ -4,7 +4,7 @@ function action = stochastic_policy(state, action_space, policy, x_length, y_len
     state_1d = x_length * (state(2)-1) + state(1);   % 转到s_i编号的状态
     actions = action_space{state_1d};                % 第i个status可以做的动作
     policy_i = policy(state_1d, :);
-
+    flag = sum(policy_i) == 1;
     % Ensure the sum of policy probabilities is 1
     assert(sum(policy_i) == 1, 'The sum of policy probabilities must be 1.');
     
