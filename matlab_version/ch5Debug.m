@@ -3,17 +3,17 @@
 clear 
 close all
 % Initialize environment parameters
-% agent_state = [1, 1];
-% final_state = [2, 2];
-% obstacle_state = [1,2];
-% x_length = 2;
-% y_length = 2;
-% Initialize environment parameters
 agent_state = [1, 1];
-final_state = [3, 4];
-obstacle_state = [2,2; 3,2; 3,3; 2,4; 4,4; 2,5];
-x_length = 5;
-y_length = 5;
+final_state = [2, 2];
+obstacle_state = [1,2];
+x_length = 2;
+y_length = 2;
+% Initialize environment parameters  30分钟
+% agent_state = [1, 1];
+% final_state = [3, 4];
+% obstacle_state = [2,2; 3,2; 3,3; 2,4; 4,4; 2,5];
+% x_length = 5;
+% y_length = 5;
 
 gamma = 0.9;
 state_space = x_length * y_length;     % 状态个数

@@ -2,12 +2,19 @@
 % 该框架只能用在书本的网格世界中。对于更一般形式的用树表示的拓扑关系不适用；尤其是该框架下状态转移是确定的。
 clear 
 close all
+% % Initialize environment parameters
+% agent_state = [1, 1];
+% final_state = [3, 4];
+% obstacle_state = [2,2; 3,2; 3,3; 2,4; 4,4; 2,5];
+% x_length = 5;
+% y_length = 5;
 % Initialize environment parameters
 agent_state = [1, 1];
-final_state = [3, 4];
-obstacle_state = [2,2; 3,2; 3,3; 2,4; 4,4; 2,5];
-x_length = 5;
-y_length = 5;
+final_state = [2, 2];
+obstacle_state = [1,2];
+x_length = 2;
+y_length = 2;
+
 gamma = 0.9;
 state_space = x_length * y_length;     % 状态个数
 state=1:state_space;         % 纯为了在网格上标注名字
@@ -101,9 +108,9 @@ function q=q_pi_iter(state, action, x_length, y_length, target_state, obstacle_s
     % 走一步进入action下的某一个叶子节点（new_state）时，对该叶子节点下面进行蒙特卡洛搜索。如果有多个叶子节点，还需要将这些叶子节点加权做和
     
     n = 50;
+    reward_future_recorder = 0;
     for iter_episode = 1:n  % 求reward的平均值用
         new_state = new_state_father;
-        reward_future_recorder = 0;
         for iter_deepth = 1:30   % 按照某些策略可能永远都到不了终点，故最好不要用while=终点来结束循环。且越future，贡献越小，后面可以忽略
             action = stochastic_policy(new_state, action_space, policy, x_length, y_length);
             [new_state, reward_future] = next_state_and_reward(new_state, action, x_length, y_length, target_state, obstacle_state, reward_forbidden, reward_target, reward_step);
