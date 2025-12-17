@@ -101,6 +101,9 @@ figure_stateValue(x_length,y_length,agent_state,final_state,obstacle_state,state
 figure,plot([0:episode_length-1],state_value_history) %[output:4a92d072]
 % 第一步的策略是一个很差的策略，导致价值函数并不是单调的。
 % 通常，不论是值迭代还是策略迭代，其前几步都不是按照指数收敛的。
+%% MC Exploring Starts
+
+
 %%
 function q=q_pi_iter(state, action, x_length, y_length, target_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy)
     % 当前的state 选择 action后可以获得的回报的平均值
