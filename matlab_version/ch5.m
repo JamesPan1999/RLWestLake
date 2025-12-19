@@ -118,7 +118,7 @@ Q = zeros(state_space, number_of_action);       % 动作价值函数
 
 % 初始策略：均匀随机策略
 policy = ones(state_space, number_of_action) * (1/number_of_action);
-
+ 
 % 主循环
 for episode = 1:episode_count %[output:group:706a7d37]
     % Exploring Starts: 随机选择起始状态-动作对
