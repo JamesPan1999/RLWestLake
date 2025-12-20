@@ -112,8 +112,8 @@ figure,plot([0:episode_length-1],state_value_history) %[output:4a92d072]
 % MC Exploring Starts 算法实现
 
 % 初始化参数
-episode_count = 100;  % 总回合数
-Tlength = 300000;  % 最大回合长度   不够长不收敛
+episode_count = 1000;  % 总回合数
+Tlength = 300;  % 最大回合长度   不够长不收敛  最终出图时，价值很多都是0的情况，一般是回合不够长
 gamma = 0.9;
 
 % 初始化数据结构
@@ -172,7 +172,7 @@ for episode = 1:episode_count
         end
     end
 
-    % 初始化累积回报
+    % 初始化累积回报   每条轨迹相互独立，分开计算时需要每次清零G Return Number
     G = 0;
     Return = zeros(state_space, number_of_action);  % 累计回报
     Number = zeros(state_space, number_of_action);  % 访问次数
@@ -198,7 +198,7 @@ for episode = 1:episode_count
             % 策略评价：更新Q值
             Q(state_1d, current_action_idx) = Return(state_1d, current_action_idx) / ...
                 Number(state_1d, current_action_idx);
-            % % 策略改进：贪婪策略
+            % % 策略改进：贪婪策略 去循环外更新策略更容易收敛
             % % 找到当前状态下具有最大Q值的动作
             % [max_q, max_action_idx] = max(Q(state_1d, :));
             % 
@@ -222,7 +222,7 @@ for episode = 1:episode_count
         %     state_value = state_value_new;
         % end
         %%%%%%%%%%%%% debug %%%%%%%%%%%
-
+        % % 在循环外进行策略更新更容易收敛
         for si = 1:state_space
             % [qmax, action_index] = max(si_q(si,:));  % 也可以用迭代完后的状态值再算一遍每一个状态对应的动作值
 
@@ -270,7 +270,7 @@ figure_policy(x_length, y_length, agent_state, final_state, obstacle_state, stat
 state_value_final = max(Q, [], 2);
 figure_stateValue(x_length, y_length, agent_state, final_state, obstacle_state, state_value_final); %[output:91b9e3ea]
 
-% 绘制学习曲线：显示每个状态-动作对的访问次数
+% 绘制学习曲线：显示每个状态-动作对的访问次数  这局限于1条路径的展示。
 figure; %[output:21c875ef]
 imagesc(Number); %[output:21c875ef]
 colorbar; %[output:21c875ef]
@@ -291,6 +291,7 @@ title('动作价值函数 Q(s,a)'); %[output:72c7a157]
 set(gca, 'YTick', 1:state_space); %[output:72c7a157]
 set(gca, 'XTick', 1:number_of_action); %[output:72c7a157]
 xticklabels({'上', '右', '下', '左', '停'}); %[output:72c7a157]
+
 
 %%
 function q=q_pi_iter(state, action, x_length, y_length, target_state, obstacle_state, reward_forbidden, reward_target, reward_step, gamma, action_space,policy)
