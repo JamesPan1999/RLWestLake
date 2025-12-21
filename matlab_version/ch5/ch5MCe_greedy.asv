@@ -200,10 +200,6 @@ for episode = 1:episode_count
         % 找到当前状态下的最优动作
         [~, a_star] = max(Q(s_idx, :));
         
-        % 每一个小步骤就更新一次policy会导致policy快速的收敛，非常不符合逻辑，
-        % 如果没有egreedy机制的话这将是非常不可理喻的。
-        % 对于epsilon = 0 时，需要将策略更新提出这个循环，才是正确的逻辑，才能收敛
-
         % 计算ε-greedy策略
         for a = 1:number_of_action
             if a == a_star
@@ -217,7 +213,9 @@ for episode = 1:episode_count
         V(s_idx) = max(Q(s_idx, :));   % 如果用egreedy策略，最终收敛到的价值和贪婪策略最终收敛到的肯定不一样
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    % 在开始的几个循环进行时，从这个循环出来时，
+    % 如果此时epsilon = 0，一旦策略被锁定到最优贪婪策略，
+    % 那么下一轮循环中，可探索的区域就很少了，很容易导致算法不收敛
 end
 toc
 % 显示最终结果
