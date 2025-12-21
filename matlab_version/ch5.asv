@@ -65,7 +65,8 @@ reward_history = zeros(episode_length, 1);
 state_history(1, :) = agent_state;
 
 %%
-% MC basic
+% MC basic  如果不收敛应该是迭代步数不够。越大的地图需要越多的步数
+tic
 PE_length = 10;
 
 for step = 1:episode_length
@@ -101,7 +102,7 @@ for step = 1:episode_length
         policy(si,action_index) = 1;
     end
 end
-
+toc
 figure_policy(x_length, y_length, agent_state,final_state, obstacle_state, state, policy, actions) %[output:2faf623d]
 figure_stateValue(x_length,y_length,agent_state,final_state,obstacle_state,state_value) %[output:32088966]
 figure,plot([0:episode_length-1],state_value_history) %[output:4a92d072]
@@ -110,10 +111,10 @@ figure,plot([0:episode_length-1],state_value_history) %[output:4a92d072]
 %%
 %[text] ## MC Exploring Starts
 % MC Exploring Starts 算法实现
-
+tic
 % 初始化参数
-episode_count = 1000;  % 总回合数
-Tlength = 300;  % 最大回合长度   不够长不收敛  最终出图时，价值很多都是0的情况，一般是回合不够长
+episode_count = 10000;  % 总回合数
+Tlength = 30000;  % 最大回合长度   不够长不收敛  最终出图时，价值很多都是0的情况，一般是回合不够长
 gamma = 0.9;
 
 % 初始化数据结构
@@ -174,11 +175,11 @@ for episode = 1:episode_count
 
     % 初始化累积回报   每条轨迹相互独立，分开计算时需要每次清零G Return Number
     G = 0;
-    Return = zeros(state_space, number_of_action);  % 累计回报
-    Number = zeros(state_space, number_of_action);  % 访问次数
+    % Return = zeros(state_space, number_of_action);  % 累计回报
+    % Number = zeros(state_space, number_of_action);  % 访问次数
 
     % 反向遍历回合中的每一步（首次访问型MC）
-    visited_pairs = zeros(state_space, number_of_action);  % 标记是否已访问
+    % visited_pairs = zeros(state_space, number_of_action);  % 标记是否已访问
 
     for t = episode_length:-1:1
             % 获取当前状态和动作
@@ -238,7 +239,7 @@ for episode = 1:episode_count
             policy(si,action_index) = 1;
         end
 end
-
+toc
 % 显示最终结果
 fprintf('\n=== MC Exploring Starts 算法完成 ===\n'); %[output:8da5ba67]
 fprintf('总回合数: %d\n', episode_count); %[output:097f2157]
