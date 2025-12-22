@@ -117,13 +117,18 @@ tic
 episode_count = 100;  % 总回合数
 Tlength = 3000;  % 最大回合长度
 gamma = 0.9;
-epsilon = 0.001;  % ε-greedy参数
+epsilon = 0.001;  % ε-greedy参数  %网格世界中，如果出现障碍物合围情况，可以调大epsilon以越过局部最优
+% 当且仅当 ε = 0 时，状态值才会收敛到和贝尔曼方程的解析解
+% 最佳的epsilon还和网格世界的大小有关，2*2的世界epsilon= 0.001时会有较好的结果.3*3的世界可能是0.1
+% 如果是全知视角（即各个概率都已知，知道解析的结果），那么将不需epsilon算法。
+% 由于轨迹是随机的，所以才需要epsilon进行探索以确保覆盖整个状态空间
 
+% 策略既不能收敛太快 又不能一直不收敛
 % 这段代码有一个非常神奇的现象，如果epsilon=0，那么这段代码将无法收敛。
-% 但是epsilon = 0.001时，这段代码将会收敛到一个非常好的结果。
+% 但是epsilon = 0.01时，这段代码将会收敛到一个非常好的结果。
 % 这是因为epsilon接近贪婪策略时，导致算法固定选择一个动作，无法探索其他动作，从而不收敛到最优
 % debug可以看到，当epsilon = 0时策略很快就收敛到了固定不变的情况
-% 如果epsilon = 0.2时，又很难收敛。这是因为随机性太强了，扰乱了较好的训练结果
+% 如果epsilon = 0.5时，又很难收敛。这是因为随机性太强了，扰乱了较好的训练结果
 
 % epsilon=0时想实现收敛，必须把策略更新放到策略评估循环外边（这样做类似于策略迭代的逻辑，同时减缓了策略更新的节奏）
 % 即每一个episode更新一次策略。否则策略收敛过快
@@ -140,6 +145,7 @@ policy = ones(state_space, number_of_action) * (1/number_of_action);
 % 主循环
 for episode = 1:episode_count
     % 临时存储当前回合的数据  每一个循环（生成新的路径之前）都要清空一次
+    % 如果没有策略更新，Return和Number是没有必要进行清空的。因为策略不变的情况下，即使轨迹不同，但每个状态-动作对应的q值相同
     Return = zeros(state_space, number_of_action); % 累计回报
     Number = zeros(state_space, number_of_action); % 访问次数
     
@@ -168,7 +174,7 @@ for episode = 1:episode_count
         % 更新访问计数
         visits(s_temp, a_idx) = visits(s_temp, a_idx) + 1;
         
-        % 检查是否到达终止状态
+        % 
         next_state_1d = x_length * (next_state(2)-1) + next_state(1);
         
         % 选择下一个动作
@@ -197,9 +203,10 @@ for episode = 1:episode_count
         if Number(s_idx, a_idx) > 0
             Q(s_idx, a_idx) = Return(s_idx, a_idx) / Number(s_idx, a_idx);
         end
-        
+        %%%%%%%%%%%  这段提出当前层循环后加上被注释掉的for也可
         % 策略改进：ε-greedy策略更新
         % 找到当前状态下的最优动作
+        % for s_idx = 1:state_space
         [~, a_star] = max(Q(s_idx, :));
         
         % 计算ε-greedy策略
@@ -213,6 +220,8 @@ for episode = 1:episode_count
         
         % 更新状态价值函数  当然这里不严谨，应该用policy乘以Q然后相加.但是用动态epsilon（收敛到ε=0的情况时是可以这样的）
         V(s_idx) = max(Q(s_idx, :));   % 如果用egreedy策略，最终收敛到的价值和贪婪策略最终收敛到的肯定不一样
+        % end
+        %%%%%%%%%%%%%
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % 在开始的几个循环进行时，从这个循环出来时，
