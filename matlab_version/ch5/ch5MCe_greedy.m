@@ -9,24 +9,24 @@ close all
 % x_length = 5;
 % y_length = 5;
 % Initialize environment parameters
-agent_state = [1, 1];
-final_state = [2, 2];
-obstacle_state = [1,2];
-x_length = 2;
-y_length = 2;
-% Initialize environment parameters
 % agent_state = [1, 1];
-% final_state = [3, 3];
-% obstacle_state = [1,2;3,2];
-% x_length = 3;
-% y_length = 3;
+% final_state = [2, 2];
+% obstacle_state = [1,2];
+% x_length = 2;
+% y_length = 2;
+% Initialize environment parameters
+agent_state = [1, 1];
+final_state = [3, 3];
+obstacle_state = [1,2;3,2];
+x_length = 3;
+y_length = 3;
 
 gamma = 0.9;
 state_space = x_length * y_length;     % 状态个数
 state=1:state_space;         % 纯为了在网格上标注名字
 state_value=zeros(state_space,1);
 
-reward_forbidden = -10;
+reward_forbidden = -10;  % 也会影响egreedy的收敛性
 reward_target = 1;
 reward_step = 0;  % 注意根据仿射变化不改变最优策略，通常情况没有用处
 
@@ -114,10 +114,10 @@ figure,plot([0:episode_length-1],state_value_history) %[output:86149756]
 % MC egreedy 算法实现
 tic
 % 初始化参数
-episode_count = 100;  % 总回合数
-Tlength = 3000;  % 最大回合长度
+episode_count = 100;  % 总回合数  如果是策略没有收敛，可能是迭代次数不够
+Tlength = 30000;  % 最大回合长度  如果值没有收敛，大概率是单条轨迹不够长，没有遍历所有状态（由于算法采用的是每次清空Return和Number)
 gamma = 0.9;
-epsilon = 0.001;  % ε-greedy参数  %网格世界中，如果出现障碍物合围情况，可以调大epsilon以越过局部最优
+epsilon = 0.01;  % ε-greedy参数  %网格世界中，如果出现障碍物合围情况，可以调大epsilon以越过局部最优
 % 当且仅当 ε = 0 时，状态值才会收敛到和贝尔曼方程的解析解
 % 最佳的epsilon还和网格世界的大小有关，2*2的世界epsilon= 0.001时会有较好的结果.3*3的世界可能是0.1
 % 如果是全知视角（即各个概率都已知，知道解析的结果），那么将不需epsilon算法。
